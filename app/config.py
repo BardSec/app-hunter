@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     AZURE_CLIENT_ID: str = ""
     AZURE_CLIENT_SECRET: str = ""
     AZURE_TENANT_ID: str = ""
-    AZURE_REDIRECT_URI: str = "http://localhost:8000/auth/callback"
+    AZURE_REDIRECT_URI: str = "http://localhost:3333/auth/callback"
 
     # Database
     DATABASE_URL: str = "sqlite+aiosqlite:///./data/audit.db"
