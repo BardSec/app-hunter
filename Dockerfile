@@ -14,4 +14,4 @@ COPY . .
 RUN mkdir -p /app/data
 
 # Run migrations then start the server
-CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 3333 --reload"]
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 33333 --reload"]

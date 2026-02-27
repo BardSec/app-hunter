@@ -49,7 +49,7 @@ def exchange_code(code: str) -> dict:
     )
 
 
-def get_logout_url(post_logout_redirect: str = "http://localhost:3333/") -> str:
+def get_logout_url(post_logout_redirect: str = "http://localhost:33333/") -> str:
     return (
         f"https://login.microsoftonline.com/{settings.AZURE_TENANT_ID}"
         f"/oauth2/v2.0/logout?post_logout_redirect_uri={post_logout_redirect}"
