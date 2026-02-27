@@ -25,6 +25,18 @@
 /* ── Table row hover ─────────────────────────────────────────────────────── */
 .hover-row:hover { background-color: hsl(var(--b2)); cursor: pointer; }
 
+/* ── Drawer overlay fix ──────────────────────────────────────────────────── */
+/* On desktop the sidebar is permanently visible (lg:drawer-open).            */
+/* The drawer-overlay <label> is position:fixed/inset:0 and silently blocks   */
+/* all pointer events even when transparent. Hide it at the lg breakpoint     */
+/* where it is never needed (there is nothing to "tap outside" to close).     */
+@media (min-width: 1024px) {
+  .drawer-overlay {
+    display: none;
+    pointer-events: none;
+  }
+}
+
 /* ── Mock mode banner ────────────────────────────────────────────────────── */
 .mock-banner {
     background: repeating-linear-gradient(
