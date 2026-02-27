@@ -124,5 +124,8 @@ async def _save_snapshot(
         expiring_90_count=exp_90,
         ferpa_flagged_count=ferpa_count,
     )
-    db.add(snapshot)
-    await db.commit()
+    try:
+        db.add(snapshot)
+        await db.commit()
+    except Exception:
+        await db.rollback()

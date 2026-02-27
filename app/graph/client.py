@@ -134,8 +134,11 @@ class GraphClient:
         raw_apps = await self._get_paged(f"/applications?$select={select}&$top=100")
         apps: list[EntraApp] = []
         for raw in raw_apps:
-            app = await self._build_app(raw)
-            apps.append(app)
+            try:
+                app = await self._build_app(raw)
+                apps.append(app)
+            except Exception:
+                pass  # skip individual apps that fail to build
         return apps
 
     async def get_app_by_id(self, object_id: str) -> Optional[EntraApp]:
@@ -146,7 +149,10 @@ class GraphClient:
             "description,publisherDomain,passwordCredentials,keyCredentials,"
             "requiredResourceAccess"
         )
-        raw = await self._get(f"/applications/{object_id}?$select={select}")
+        try:
+            raw = await self._get(f"/applications/{object_id}?$select={select}")
+        except httpx.HTTPStatusError:
+            return None
         return await self._build_app(raw)
 
     # ── internal builders ─────────────────────────────────────────────────────
