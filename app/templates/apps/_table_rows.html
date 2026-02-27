@@ -1,0 +1,90 @@
+{% if apps %}
+  {% for app in apps %}
+  <tr class="hover-row" onclick="location.href='/apps/{{ app.id }}'">
+
+    <!-- App name + ownerless indicator -->
+    <td>
+      <div class="font-medium text-sm text-slate-800">{{ app.display_name }}</div>
+      <div class="text-xs text-slate-400 font-mono">{{ app.app_id[:8] }}…</div>
+      {% if app.is_ownerless %}
+        <span class="badge badge-xs badge-warning mt-0.5">No owner</span>
+      {% endif %}
+    </td>
+
+    <!-- Created date -->
+    <td class="text-sm text-slate-600 whitespace-nowrap">
+      {{ app.created_date | format_date }}
+    </td>
+
+    <!-- Sign-in audience -->
+    <td class="text-sm text-slate-600 whitespace-nowrap">
+      {% if app.is_external_facing %}
+        <span class="badge badge-xs badge-outline badge-warning">{{ app.sign_in_audience | audience_label }}</span>
+      {% else %}
+        <span class="text-xs text-slate-500">{{ app.sign_in_audience | audience_label }}</span>
+      {% endif %}
+    </td>
+
+    <!-- Owners -->
+    <td class="text-sm">
+      {% if app.owners %}
+        {% for owner in app.owners %}
+          <div class="text-xs text-slate-600 truncate max-w-[140px]" title="{{ owner.user_principal_name }}">
+            {{ owner.display_name }}
+          </div>
+        {% endfor %}
+      {% else %}
+        <span class="text-xs text-red-600 font-medium">— unassigned —</span>
+      {% endif %}
+    </td>
+
+    <!-- Top permissions -->
+    <td>
+      {% set high_perms = app.permissions | selectattr("risk_level", "equalto", "HIGH") | list %}
+      {% set med_perms  = app.permissions | selectattr("risk_level", "equalto", "MEDIUM") | list %}
+      {% if high_perms %}
+        <span class="badge badge-xs badge-risk-high">{{ high_perms[0].name }}</span>
+        {% if high_perms | length > 1 %}
+          <span class="text-xs text-slate-400 ml-1">+{{ high_perms | length - 1 }} more</span>
+        {% endif %}
+      {% elif med_perms %}
+        <span class="badge badge-xs badge-risk-medium">{{ med_perms[0].name }}</span>
+      {% else %}
+        <span class="text-xs text-slate-400">Basic scopes only</span>
+      {% endif %}
+    </td>
+
+    <!-- Credentials -->
+    <td class="text-sm whitespace-nowrap">
+      {% if app.credentials %}
+        {% if app.has_expired_credentials %}
+          <span class="cred-expired text-xs">✕ Expired</span>
+        {% elif app.has_expiring_credentials %}
+          {% set soon = app.credentials | selectattr("status", "equalto", "EXPIRING_SOON") | list %}
+          {% if soon %}
+            <span class="cred-expiring-soon text-xs">⚠ {{ soon[0].days_until_expiry }}d</span>
+          {% else %}
+            <span class="cred-expiring text-xs">⚡ Expiring</span>
+          {% endif %}
+        {% else %}
+          <span class="cred-ok text-xs">✓ OK</span>
+        {% endif %}
+      {% else %}
+        <span class="text-xs text-slate-400">None</span>
+      {% endif %}
+    </td>
+
+    <!-- Risk badge -->
+    <td class="text-center">
+      <span class="badge badge-sm {{ app.risk_level | risk_badge }}">{{ app.risk_level }}</span>
+    </td>
+
+  </tr>
+  {% endfor %}
+{% else %}
+  <tr>
+    <td colspan="7" class="text-center text-slate-400 py-8">
+      No apps match the current filters.
+    </td>
+  </tr>
+{% endif %}

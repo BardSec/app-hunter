@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In — Entra App Auditor</title>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4/dist/full.min.css" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/static/custom.css" />
+</head>
+<body class="min-h-screen bg-slate-100 flex items-center justify-center">
+
+<div class="card w-full max-w-md bg-white shadow-xl">
+  <div class="card-body p-8">
+
+    <!-- Logo -->
+    <div class="flex flex-col items-center mb-6">
+      <div class="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center mb-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955
+               11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824
+               10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+      </div>
+      <h1 class="text-2xl font-bold text-slate-800">Entra App Auditor</h1>
+      <p class="text-sm text-slate-500 mt-1">K-12 App Registration Security Review</p>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-error mb-4 text-sm">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>{{ error }}</span>
+    </div>
+    {% endif %}
+
+    <a href="/auth/login"
+       class="btn btn-primary w-full gap-2 text-base">
+      <!-- Microsoft logo -->
+      <svg class="h-5 w-5" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+        <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+        <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+        <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+      </svg>
+      Sign in with Microsoft
+    </a>
+
+    <p class="text-xs text-slate-400 text-center mt-4">
+      Sign in with your school district Microsoft 365 account.<br/>
+      The app requests read-only access to app registrations.
+    </p>
+
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,35 @@
+{% macro risk_badge(level) %}
+<span class="badge badge-sm {{ level | risk_badge }}">{{ level }}</span>
+{% endmacro %}
+
+{% macro cred_status_badge(status, days) %}
+{% if status == "EXPIRED" %}
+  <span class="cred-expired text-xs">✕ Expired</span>
+{% elif status == "EXPIRING_SOON" %}
+  <span class="cred-expiring-soon text-xs">⚠ {{ days }}d</span>
+{% elif status == "EXPIRING" %}
+  <span class="cred-expiring text-xs">⚡ {{ days }}d</span>
+{% elif status == "EXPIRING_LATER" %}
+  <span class="cred-expiring-late text-xs">~ {{ days }}d</span>
+{% else %}
+  <span class="cred-ok text-xs">✓ OK</span>
+{% endif %}
+{% endmacro %}
+
+{% macro perm_badge(perm) %}
+{% if perm.risk_level == "HIGH" %}
+  <span class="badge badge-xs badge-risk-high" title="{{ perm.description }}">{{ perm.name }}</span>
+{% elif perm.risk_level == "MEDIUM" %}
+  <span class="badge badge-xs badge-risk-medium" title="{{ perm.description }}">{{ perm.name }}</span>
+{% elif perm.risk_level == "LOW" %}
+  <span class="badge badge-xs badge-risk-low" title="{{ perm.description }}">{{ perm.name }}</span>
+{% else %}
+  <span class="badge badge-xs badge-ghost" title="{{ perm.description }}">{{ perm.name }}</span>
+{% endif %}
+{% if perm.is_ferpa_relevant %}
+  <span class="badge badge-xs badge-outline badge-secondary ml-0.5" title="FERPA-relevant permission">FERPA</span>
+{% endif %}
+{% if perm.is_offline_access %}
+  <span class="badge badge-xs badge-outline badge-accent ml-0.5" title="Persistent delegated access">offline</span>
+{% endif %}
+{% endmacro %}

@@ -1,0 +1,67 @@
+from fastapi import APIRouter, Depends, Request
+from app.templates_config import templates
+from fastapi.responses import HTMLResponse
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.auth.dependencies import get_current_user
+from app.config import settings
+from app.database import get_db
+from app.services import app_inventory
+
+router = APIRouter()
+
+
+
+@router.get("/", response_class=HTMLResponse)
+async def app_list(
+    request: Request,
+    q: str = "",
+    risk: str = "",
+    has_owner: str = "",
+    audience: str = "",
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    apps = await app_inventory.get_apps(
+        user["access_token"], db,
+        q=q, risk=risk, has_owner=has_owner, audience=audience,
+    )
+
+    context = {
+        "request": request,
+        "current_user": user,
+        "mock_mode": settings.MOCK_DATA,
+        "active_page": "apps",
+        "apps": apps,
+        "filters": {"q": q, "risk": risk, "has_owner": has_owner, "audience": audience},
+        "total": len(apps),
+    }
+
+    # HTMX partial — return only the table rows fragment
+    if request.headers.get("HX-Request"):
+        return templates.TemplateResponse("apps/_table_rows.html", context)
+
+    return templates.TemplateResponse("apps/index.html", context)
+
+
+@router.get("/{app_id}", response_class=HTMLResponse)
+async def app_detail(
+    app_id: str,
+    request: Request,
+    user: dict = Depends(get_current_user),
+):
+    app = await app_inventory.get_app_detail(user["access_token"], app_id)
+    if app is None:
+        return HTMLResponse("<p>App not found.</p>", status_code=404)
+
+    return templates.TemplateResponse(
+        "apps/detail.html",
+        {
+            "request": request,
+            "current_user": user,
+            "mock_mode": settings.MOCK_DATA,
+            "active_page": "apps",
+            "app": app,
+        },
+    )

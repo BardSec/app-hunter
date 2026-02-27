@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+{% from "macros.html" import perm_badge, cred_status_badge %}
+{% block title %}{{ app.display_name }} — Entra App Auditor{% endblock %}
+
+{% block content %}
+
+<!-- Back -->
+<a href="/apps" class="btn btn-sm btn-ghost gap-1 mb-4">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+  </svg>
+  Back to App Inventory
+</a>
+
+<!-- ── App header ── -->
+<div class="card bg-white shadow-sm mb-5">
+  <div class="card-body p-5">
+    <div class="flex items-start justify-between flex-wrap gap-3">
+      <div>
+        <h1 class="text-xl font-bold text-slate-800">{{ app.display_name }}</h1>
+        {% if app.description %}
+          <p class="text-sm text-slate-500 mt-0.5">{{ app.description }}</p>
+        {% endif %}
+        <div class="flex flex-wrap gap-2 mt-2 text-xs text-slate-500">
+          <span title="Object ID"><strong>Object ID:</strong> <code>{{ app.id }}</code></span>
+          <span>·</span>
+          <span title="App (client) ID"><strong>Client ID:</strong> <code>{{ app.app_id }}</code></span>
+          <span>·</span>
+          <span><strong>Created:</strong> {{ app.created_date | format_date }}</span>
+          <span>·</span>
+          <span><strong>Audience:</strong>
+            {% if app.is_external_facing %}
+              <span class="text-amber-600 font-semibold">{{ app.sign_in_audience | audience_label }}</span>
+            {% else %}
+              {{ app.sign_in_audience | audience_label }}
+            {% endif %}
+          </span>
+        </div>
+      </div>
+      <span class="badge badge-lg {{ app.risk_level | risk_badge }}">{{ app.risk_level }} RISK</span>
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+  <!-- ── Left column: Owners + Compliance flags ── -->
+  <div class="space-y-5">
+
+    <!-- Owners -->
+    <div class="card bg-white shadow-sm">
+      <div class="card-body p-4">
+        <h2 class="font-semibold text-slate-700 mb-3 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+          Owners
+        </h2>
+        {% if app.owners %}
+          <ul class="space-y-2">
+            {% for owner in app.owners %}
+            <li class="text-sm">
+              <p class="font-medium text-slate-700">{{ owner.display_name }}</p>
+              {% if owner.user_principal_name %}
+                <p class="text-xs text-slate-400">{{ owner.user_principal_name }}</p>
+              {% endif %}
+            </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="alert alert-warning py-2 text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            No owners assigned — governance gap.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Risk flags -->
+    <div class="card bg-white shadow-sm">
+      <div class="card-body p-4">
+        <h2 class="font-semibold text-slate-700 mb-3">Risk Flags</h2>
+        <ul class="space-y-2 text-sm">
+          <li class="flex items-center gap-2">
+            {% if app.has_high_risk_permissions %}
+              <span class="w-2 h-2 rounded-full bg-red-500 shrink-0"></span>
+              <span class="text-red-700 font-medium">High-privilege permissions</span>
+            {% else %}
+              <span class="w-2 h-2 rounded-full bg-green-400 shrink-0"></span>
+              <span class="text-slate-500">No high-privilege permissions</span>
+            {% endif %}
+          </li>
+          <li class="flex items-center gap-2">
+            {% if app.is_ownerless %}
+              <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
+              <span class="text-amber-700 font-medium">No assigned owner</span>
+            {% else %}
+              <span class="w-2 h-2 rounded-full bg-green-400 shrink-0"></span>
+              <span class="text-slate-500">Has at least one owner</span>
+            {% endif %}
+          </li>
+          <li class="flex items-center gap-2">
+            {% if app.is_external_facing %}
+              <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
+              <span class="text-amber-700 font-medium">External-facing audience</span>
+            {% else %}
+              <span class="w-2 h-2 rounded-full bg-green-400 shrink-0"></span>
+              <span class="text-slate-500">Internal audience only</span>
+            {% endif %}
+          </li>
+          <li class="flex items-center gap-2">
+            {% if app.has_expired_credentials %}
+              <span class="w-2 h-2 rounded-full bg-red-500 shrink-0"></span>
+              <span class="text-red-700 font-medium">Has expired credentials</span>
+            {% elif app.has_expiring_credentials %}
+              <span class="w-2 h-2 rounded-full bg-orange-500 shrink-0"></span>
+              <span class="text-orange-700 font-medium">Credentials expiring soon</span>
+            {% else %}
+              <span class="w-2 h-2 rounded-full bg-green-400 shrink-0"></span>
+              <span class="text-slate-500">Credentials healthy</span>
+            {% endif %}
+          </li>
+          <li class="flex items-center gap-2">
+            {% if app.has_offline_access %}
+              <span class="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
+              <span class="text-blue-700 font-medium">Has offline_access scope</span>
+            {% else %}
+              <span class="w-2 h-2 rounded-full bg-green-400 shrink-0"></span>
+              <span class="text-slate-500">No offline_access scope</span>
+            {% endif %}
+          </li>
+          {% if app.ferpa_risk_score > 0 %}
+          <li class="flex items-center gap-2 pt-1 border-t border-slate-100">
+            <span class="w-2 h-2 rounded-full bg-purple-500 shrink-0"></span>
+            <span class="text-purple-700 font-medium">FERPA score: {{ app.ferpa_risk_score }}</span>
+          </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Right columns: Permissions + Credentials ── -->
+  <div class="lg:col-span-2 space-y-5">
+
+    <!-- Permissions -->
+    <div class="card bg-white shadow-sm">
+      <div class="card-body p-4">
+        <h2 class="font-semibold text-slate-700 mb-3 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+          </svg>
+          API Permissions
+          <span class="badge badge-sm badge-ghost">{{ app.permissions | length }}</span>
+        </h2>
+        {% if app.permissions %}
+          <div class="overflow-x-auto">
+            <table class="table table-sm w-full">
+              <thead class="bg-slate-50">
+                <tr>
+                  <th class="text-slate-500">Permission</th>
+                  <th class="text-slate-500">Type</th>
+                  <th class="text-slate-500">Risk</th>
+                  <th class="text-slate-500">Flags</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% set sorted_perms = app.permissions | sort(attribute='risk_level') %}
+                {% for perm in app.permissions | sort(attribute='name') | sort(attribute='risk_level') %}
+                <tr>
+                  <td class="font-mono text-xs font-medium" title="{{ perm.description }}">
+                    {{ perm.name }}
+                    {% if perm.description %}
+                      <div class="text-slate-400 font-sans font-normal text-xs normal-case">{{ perm.description }}</div>
+                    {% endif %}
+                  </td>
+                  <td class="text-xs">
+                    {% if perm.permission_type == "application" %}
+                      <span class="badge badge-xs badge-info">App</span>
+                    {% else %}
+                      <span class="badge badge-xs badge-ghost">Delegated</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <span class="badge badge-xs {{ perm.risk_level | risk_badge }}">{{ perm.risk_level }}</span>
+                  </td>
+                  <td class="space-x-1">
+                    {% if perm.is_ferpa_relevant %}
+                      <span class="badge badge-xs badge-outline badge-secondary" title="Listed in your FERPA/COPPA permission watchlist">FERPA</span>
+                    {% endif %}
+                    {% if perm.is_offline_access %}
+                      <span class="badge badge-xs badge-outline badge-accent" title="Grants persistent offline access">offline</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="text-sm text-slate-400">No API permissions registered.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Credentials -->
+    <div class="card bg-white shadow-sm">
+      <div class="card-body p-4">
+        <h2 class="font-semibold text-slate-700 mb-3 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          Credentials
+          <span class="badge badge-sm badge-ghost">{{ app.credentials | length }}</span>
+        </h2>
+        {% if app.credentials %}
+          <div class="overflow-x-auto">
+            <table class="table table-sm w-full">
+              <thead class="bg-slate-50">
+                <tr>
+                  <th class="text-slate-500">Name</th>
+                  <th class="text-slate-500">Type</th>
+                  <th class="text-slate-500">Expires</th>
+                  <th class="text-slate-500">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for cred in app.credentials %}
+                <tr>
+                  <td class="text-sm">{{ cred.display_name }}</td>
+                  <td class="text-sm capitalize">{{ cred.credential_type }}</td>
+                  <td class="text-sm whitespace-nowrap">{{ cred.end_date | format_date }}</td>
+                  <td class="whitespace-nowrap">
+                    {{ cred_status_badge(cred.status, cred.days_until_expiry) }}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="text-sm text-slate-400">No credentials registered on this app.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- FERPA risk factors (if any) -->
+    {% if app.ferpa_risk_factors %}
+    <div class="card bg-purple-50 border border-purple-200 shadow-sm">
+      <div class="card-body p-4">
+        <h2 class="font-semibold text-purple-800 mb-2">FERPA / COPPA Risk Factors</h2>
+        <ul class="space-y-1">
+          {% for factor in app.ferpa_risk_factors %}
+          <li class="text-sm text-purple-700 flex items-start gap-2">
+            <span class="mt-0.5 shrink-0">•</span>{{ factor }}
+          </li>
+          {% endfor %}
+        </ul>
+        <p class="text-xs text-purple-500 mt-2">
+          Risk score: <strong>{{ app.ferpa_risk_score }}</strong> ·
+          <a href="/compliance" class="underline">View in Compliance tab →</a>
+        </p>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}App Inventory — Entra App Auditor{% endblock %}
+
+{% block content %}
+
+<div class="flex items-center justify-between mb-4">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-800">App Inventory</h1>
+    <p class="text-sm text-slate-500 mt-0.5">
+      <span id="app-count">{{ total }}</span> app{{ 's' if total != 1 else '' }}
+    </p>
+  </div>
+</div>
+
+<!-- ── Filters ── -->
+<div class="card bg-white shadow-sm mb-4">
+  <div class="card-body p-3">
+    <div class="flex flex-wrap gap-3 items-end">
+
+      <!-- Search -->
+      <div class="form-control flex-1 min-w-[160px]">
+        <label class="label py-0.5"><span class="label-text text-xs">Search</span></label>
+        <input
+          type="text"
+          name="q"
+          value="{{ filters.q }}"
+          placeholder="App name…"
+          class="input input-bordered input-sm"
+          hx-get="/apps/"
+          hx-trigger="keyup changed delay:350ms"
+          hx-target="#app-tbody"
+          hx-swap="innerHTML"
+          hx-include="[name='risk'],[name='has_owner'],[name='audience']"
+          hx-indicator="#htmx-loading"
+        />
+      </div>
+
+      <!-- Risk level -->
+      <div class="form-control">
+        <label class="label py-0.5"><span class="label-text text-xs">Risk level</span></label>
+        <select name="risk"
+                class="select select-bordered select-sm"
+                hx-get="/apps/"
+                hx-trigger="change"
+                hx-target="#app-tbody"
+                hx-swap="innerHTML"
+                hx-include="[name='q'],[name='has_owner'],[name='audience']"
+                hx-indicator="#htmx-loading">
+          <option value="" {% if not filters.risk %}selected{% endif %}>All</option>
+          <option value="HIGH"   {% if filters.risk == 'HIGH' %}selected{% endif %}>High</option>
+          <option value="MEDIUM" {% if filters.risk == 'MEDIUM' %}selected{% endif %}>Medium</option>
+          <option value="LOW"    {% if filters.risk == 'LOW' %}selected{% endif %}>Low</option>
+          <option value="NONE"   {% if filters.risk == 'NONE' %}selected{% endif %}>None</option>
+        </select>
+      </div>
+
+      <!-- Owner -->
+      <div class="form-control">
+        <label class="label py-0.5"><span class="label-text text-xs">Owner</span></label>
+        <select name="has_owner"
+                class="select select-bordered select-sm"
+                hx-get="/apps/"
+                hx-trigger="change"
+                hx-target="#app-tbody"
+                hx-swap="innerHTML"
+                hx-include="[name='q'],[name='risk'],[name='audience']"
+                hx-indicator="#htmx-loading">
+          <option value="" {% if not filters.has_owner %}selected{% endif %}>All</option>
+          <option value="yes" {% if filters.has_owner == 'yes' %}selected{% endif %}>Has owner</option>
+          <option value="no"  {% if filters.has_owner == 'no' %}selected{% endif %}>No owner</option>
+        </select>
+      </div>
+
+      <!-- Audience -->
+      <div class="form-control">
+        <label class="label py-0.5"><span class="label-text text-xs">Audience</span></label>
+        <select name="audience"
+                class="select select-bordered select-sm"
+                hx-get="/apps/"
+                hx-trigger="change"
+                hx-target="#app-tbody"
+                hx-swap="innerHTML"
+                hx-include="[name='q'],[name='risk'],[name='has_owner']"
+                hx-indicator="#htmx-loading">
+          <option value="" {% if not filters.audience %}selected{% endif %}>All</option>
+          <option value="AzureADMyOrg" {% if filters.audience == 'AzureADMyOrg' %}selected{% endif %}>My org only</option>
+          <option value="AzureADMultipleOrgs" {% if filters.audience == 'AzureADMultipleOrgs' %}selected{% endif %}>Multiple orgs</option>
+          <option value="AzureADAndPersonalMicrosoftAccount" {% if filters.audience == 'AzureADAndPersonalMicrosoftAccount' %}selected{% endif %}>Org + Personal</option>
+        </select>
+      </div>
+
+      <!-- Clear -->
+      <a href="/apps/" class="btn btn-sm btn-ghost">Clear</a>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── Table ── -->
+<div class="card bg-white shadow-sm overflow-x-auto">
+  <table class="table table-sm w-full">
+    <thead class="bg-slate-50">
+      <tr>
+        <th class="text-slate-600">App Name</th>
+        <th class="text-slate-600">Created</th>
+        <th class="text-slate-600">Audience</th>
+        <th class="text-slate-600">Owner(s)</th>
+        <th class="text-slate-600">Top Permission</th>
+        <th class="text-slate-600">Credentials</th>
+        <th class="text-slate-600 text-center">Risk</th>
+      </tr>
+    </thead>
+    <tbody id="app-tbody">
+      {% include "apps/_table_rows.html" %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

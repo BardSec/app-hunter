@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Compliance — Entra App Auditor{% endblock %}
+
+{% block content %}
+
+<div class="flex items-center justify-between mb-2">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-800">Compliance View</h1>
+    <p class="text-sm text-slate-500 mt-0.5">FERPA / COPPA — apps with broad data access permissions</p>
+  </div>
+</div>
+
+<!-- Info banner -->
+<div class="alert bg-purple-50 border border-purple-200 text-purple-800 text-sm mb-4 py-2">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+  <span>
+    Apps shown here have permissions that may involve access to student or staff data relevant to
+    <strong>FERPA</strong> or <strong>COPPA</strong> obligations, or have the
+    <strong>offline_access</strong> scope. Review each app and add a note documenting your
+    assessment or remediation plan.
+  </span>
+</div>
+
+<!-- Filters -->
+<div class="card bg-white shadow-sm mb-4">
+  <div class="card-body p-3">
+    <form method="get" action="/compliance/" class="flex gap-3 items-end flex-wrap">
+      <div class="form-control flex-1 min-w-[160px]">
+        <label class="label py-0.5"><span class="label-text text-xs">Search app</span></label>
+        <input type="text" name="q" value="{{ filters.q }}" placeholder="App name…"
+               class="input input-bordered input-sm" />
+      </div>
+      <div class="form-control">
+        <label class="label py-0.5"><span class="label-text text-xs">FERPA risk</span></label>
+        <select name="risk" class="select select-bordered select-sm">
+          <option value="" {% if not filters.risk %}selected{% endif %}>All</option>
+          <option value="HIGH"   {% if filters.risk == 'HIGH' %}selected{% endif %}>High</option>
+          <option value="MEDIUM" {% if filters.risk == 'MEDIUM' %}selected{% endif %}>Medium</option>
+          <option value="LOW"    {% if filters.risk == 'LOW' %}selected{% endif %}>Low</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+      <a href="/compliance/" class="btn btn-sm btn-ghost">Clear</a>
+      <span class="text-xs text-slate-400 self-center">{{ total }} app{{ 's' if total != 1 else '' }}</span>
+    </form>
+  </div>
+</div>
+
+<!-- Apps list -->
+{% if apps %}
+  {% for app in apps %}
+  {% set fr_level = ferpa_risk_level(app.ferpa_risk_score) %}
+
+  <div class="card bg-white shadow-sm mb-3 border-l-4
+    {% if fr_level == 'HIGH' %}border-red-500
+    {% elif fr_level == 'MEDIUM' %}border-amber-400
+    {% else %}border-yellow-300{% endif %}">
+    <div class="card-body p-4">
+
+      <div class="flex items-start justify-between flex-wrap gap-2 mb-3">
+        <div>
+          <a href="/apps/{{ app.id }}"
+             class="font-semibold text-slate-800 hover:text-blue-600 text-base">
+            {{ app.display_name }}
+          </a>
+          <div class="flex flex-wrap gap-2 mt-1 text-xs text-slate-500">
+            <span>Created {{ app.created_date | format_date }}</span>
+            <span>·</span>
+            <span>{{ app.sign_in_audience | audience_label }}</span>
+            {% if app.owners %}
+              <span>· Owner: {{ app.owners[0].display_name }}</span>
+            {% else %}
+              <span class="text-red-600 font-medium">· No owner</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0">
+          <span class="text-xs text-slate-500">FERPA score:</span>
+          <span class="font-bold text-lg
+            {% if fr_level == 'HIGH' %}text-red-600
+            {% elif fr_level == 'MEDIUM' %}text-amber-600
+            {% else %}text-yellow-600{% endif %}">
+            {{ app.ferpa_risk_score }}
+          </span>
+          <span class="badge badge-sm {{ fr_level | risk_badge }}">{{ fr_level }}</span>
+        </div>
+      </div>
+
+      <!-- Risk factors -->
+      <div class="mb-3">
+        <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Risk factors</p>
+        <ul class="space-y-0.5">
+          {% for factor in app.ferpa_risk_factors %}
+          <li class="text-xs text-slate-700 flex items-start gap-1.5">
+            <span class="mt-0.5 text-slate-400">▸</span>{{ factor }}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <!-- Permissions quick view -->
+      <div class="mb-3 flex flex-wrap gap-1">
+        {% for perm in app.permissions %}
+          {% if perm.is_ferpa_relevant or perm.is_offline_access %}
+            <span class="badge badge-xs {{ perm.risk_level | risk_badge }}" title="{{ perm.description }}">
+              {{ perm.name }}
+              {% if perm.permission_type == "application" %}(App){% else %}(Del){% endif %}
+            </span>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <!-- Compliance note -->
+      <div class="border-t border-slate-100 pt-3">
+        <p class="text-xs font-medium text-slate-500 mb-1">Admin note</p>
+        <div id="note-{{ app.id }}">
+          {% if notes_by_app.get(app.id) %}
+            <p class="text-sm text-slate-700 mt-1">{{ notes_by_app[app.id].note }}</p>
+            <button class="btn btn-xs btn-ghost mt-1"
+                    hx-get="/compliance/{{ app.id }}/note-form"
+                    hx-target="#note-{{ app.id }}"
+                    hx-swap="outerHTML">Edit</button>
+          {% else %}
+            <button class="btn btn-xs btn-ghost text-blue-600"
+                    hx-get="/compliance/{{ app.id }}/note-form"
+                    hx-target="#note-{{ app.id }}"
+                    hx-swap="outerHTML">+ Add note</button>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  {% endfor %}
+{% else %}
+  <div class="card bg-white shadow-sm">
+    <div class="card-body py-12 text-center text-slate-400">
+      No apps match the current compliance filters.
+    </div>
+  </div>
+{% endif %}
+
+{% endblock %}

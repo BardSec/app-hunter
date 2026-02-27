@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Entra App Auditor{% endblock %}
+
+{% block content %}
+
+<!-- Page header -->
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-800">Dashboard</h1>
+    <p class="text-sm text-slate-500 mt-0.5">
+      {{ tenant.tenant_name }}
+      {% if mock_mode %}<span class="badge badge-warning badge-sm ml-2">Demo data</span>{% endif %}
+    </p>
+  </div>
+  <a href="/" class="btn btn-sm btn-outline gap-1">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+    </svg>
+    Refresh
+  </a>
+</div>
+
+<!-- ── Summary stat cards ── -->
+<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+
+  <a href="/apps" class="card bg-white shadow-sm hover:shadow-md transition-shadow">
+    <div class="card-body p-4">
+      <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Total Apps</p>
+      <p class="text-3xl font-bold text-slate-800 mt-1">{{ total_apps }}</p>
+      <p class="text-xs text-slate-400 mt-1">Registered</p>
+    </div>
+  </a>
+
+  <a href="/apps?risk=HIGH" class="card bg-white shadow-sm hover:shadow-md transition-shadow border-l-4 border-red-400">
+    <div class="card-body p-4">
+      <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">High Risk</p>
+      <p class="text-3xl font-bold text-red-600 mt-1">{{ high_risk_count }}</p>
+      <p class="text-xs text-slate-400 mt-1">Apps</p>
+    </div>
+  </a>
+
+  <a href="/apps?has_owner=no" class="card bg-white shadow-sm hover:shadow-md transition-shadow border-l-4 border-amber-400">
+    <div class="card-body p-4">
+      <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Ownerless</p>
+      <p class="text-3xl font-bold text-amber-600 mt-1">{{ ownerless_count }}</p>
+      <p class="text-xs text-slate-400 mt-1">Apps</p>
+    </div>
+  </a>
+
+  <a href="/credentials" class="card bg-white shadow-sm hover:shadow-md transition-shadow border-l-4 border-red-500">
+    <div class="card-body p-4">
+      <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Expired Creds</p>
+      <p class="text-3xl font-bold text-red-600 mt-1">{{ expired_cred_count }}</p>
+      <p class="text-xs text-slate-400 mt-1">Credentials</p>
+    </div>
+  </a>
+
+  <a href="/credentials" class="card bg-white shadow-sm hover:shadow-md transition-shadow border-l-4 border-orange-400">
+    <div class="card-body p-4">
+      <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Expiring &lt;30d</p>
+      <p class="text-3xl font-bold text-orange-600 mt-1">{{ expiring_soon_count }}</p>
+      <p class="text-xs text-slate-400 mt-1">Credentials</p>
+    </div>
+  </a>
+
+  <a href="/compliance" class="card bg-white shadow-sm hover:shadow-md transition-shadow border-l-4 border-purple-400">
+    <div class="card-body p-4">
+      <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">FERPA Flagged</p>
+      <p class="text-3xl font-bold text-purple-600 mt-1">{{ ferpa_count }}</p>
+      <p class="text-xs text-slate-400 mt-1">Apps</p>
+    </div>
+  </a>
+
+</div>
+
+<!-- ── Quick-view tables ── -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+  <!-- Expired credentials -->
+  <div class="card bg-white shadow-sm">
+    <div class="card-body p-0">
+      <div class="flex items-center justify-between px-4 pt-4 pb-2">
+        <h2 class="font-semibold text-slate-700 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-red-500 inline-block"></span>
+          Expired Credentials
+        </h2>
+        <a href="/credentials" class="text-xs text-blue-600 hover:underline">View all →</a>
+      </div>
+      {% if expired_apps %}
+      <table class="table table-xs w-full">
+        <tbody>
+          {% for app in expired_apps %}
+          <tr class="hover-row" onclick="location.href='/apps/{{ app.id }}'">
+            <td class="font-medium text-sm">{{ app.display_name }}</td>
+            <td class="text-right">
+              <span class="badge badge-sm badge-error">Expired</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="px-4 pb-4 text-sm text-slate-400">No expired credentials — nice work.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Ownerless apps -->
+  <div class="card bg-white shadow-sm">
+    <div class="card-body p-0">
+      <div class="flex items-center justify-between px-4 pt-4 pb-2">
+        <h2 class="font-semibold text-slate-700 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-amber-500 inline-block"></span>
+          Ownerless Apps
+        </h2>
+        <a href="/apps?has_owner=no" class="text-xs text-blue-600 hover:underline">View all →</a>
+      </div>
+      {% if ownerless_apps %}
+      <table class="table table-xs w-full">
+        <tbody>
+          {% for app in ownerless_apps %}
+          <tr class="hover-row" onclick="location.href='/apps/{{ app.id }}'">
+            <td class="font-medium text-sm">{{ app.display_name }}</td>
+            <td class="text-right">
+              <span class="badge badge-sm badge-warning">No owner</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="px-4 pb-4 text-sm text-slate-400">All apps have at least one owner.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- High-risk apps -->
+  <div class="card bg-white shadow-sm">
+    <div class="card-body p-0">
+      <div class="flex items-center justify-between px-4 pt-4 pb-2">
+        <h2 class="font-semibold text-slate-700 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-red-600 inline-block"></span>
+          High Risk Apps
+        </h2>
+        <a href="/apps?risk=HIGH" class="text-xs text-blue-600 hover:underline">View all →</a>
+      </div>
+      {% if high_risk_apps %}
+      <table class="table table-xs w-full">
+        <tbody>
+          {% for app in high_risk_apps %}
+          <tr class="hover-row" onclick="location.href='/apps/{{ app.id }}'">
+            <td class="font-medium text-sm">{{ app.display_name }}</td>
+            <td class="text-right">
+              <span class="badge badge-sm badge-risk-high">HIGH</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="px-4 pb-4 text-sm text-slate-400">No high-risk apps found.</p>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

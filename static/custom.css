@@ -1,0 +1,43 @@
+/* ── Sidebar active nav item ─────────────────────────────────────────────── */
+.nav-link.active {
+    background-color: hsl(var(--p));
+    color: hsl(var(--pc));
+    border-radius: 0.5rem;
+}
+
+/* ── Risk badge colours (used alongside DaisyUI badge sizes) ─────────────── */
+.badge-risk-high   { background-color: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+.badge-risk-medium { background-color: #fef3c7; color: #92400e; border-color: #fcd34d; }
+.badge-risk-low    { background-color: #fefce8; color: #854d0e; border-color: #fde68a; }
+.badge-risk-none   { background-color: #dcfce7; color: #166534; border-color: #86efac; }
+
+/* ── Credential status colours ───────────────────────────────────────────── */
+.cred-expired       { color: #dc2626; font-weight: 600; }
+.cred-expiring-soon { color: #ea580c; font-weight: 600; }
+.cred-expiring      { color: #d97706; font-weight: 500; }
+.cred-expiring-late { color: #ca8a04; font-weight: 500; }
+.cred-ok            { color: #16a34a; }
+
+/* ── HTMX loading indicator ──────────────────────────────────────────────── */
+.htmx-indicator { display: none; }
+.htmx-request .htmx-indicator { display: inline-block; }
+
+/* ── Table row hover ─────────────────────────────────────────────────────── */
+.hover-row:hover { background-color: hsl(var(--b2)); cursor: pointer; }
+
+/* ── Mock mode banner ────────────────────────────────────────────────────── */
+.mock-banner {
+    background: repeating-linear-gradient(
+        45deg,
+        #fef08a,
+        #fef08a 10px,
+        #fef9c3 10px,
+        #fef9c3 20px
+    );
+    border-bottom: 2px solid #eab308;
+    padding: 0.4rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #713f12;
+    text-align: center;
+}

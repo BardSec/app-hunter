@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Permissions — Entra App Auditor{% endblock %}
+
+{% block content %}
+
+<div class="flex items-center justify-between mb-4">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-800">Permission Auditor</h1>
+    <p class="text-sm text-slate-500 mt-0.5">{{ total }} permission grant{{ 's' if total != 1 else '' }}</p>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="card bg-white shadow-sm mb-4">
+  <div class="card-body p-3">
+    <form method="get" action="/permissions/" class="flex flex-wrap gap-3 items-end">
+
+      <div class="form-control flex-1 min-w-[160px]">
+        <label class="label py-0.5"><span class="label-text text-xs">Search app or permission</span></label>
+        <input type="text" name="q" value="{{ filters.q }}" placeholder="e.g. Mail.Read…"
+               class="input input-bordered input-sm" />
+      </div>
+
+      <div class="form-control">
+        <label class="label py-0.5"><span class="label-text text-xs">Risk level</span></label>
+        <select name="risk" class="select select-bordered select-sm">
+          <option value="" {% if not filters.risk %}selected{% endif %}>All</option>
+          <option value="HIGH"   {% if filters.risk == 'HIGH' %}selected{% endif %}>High</option>
+          <option value="MEDIUM" {% if filters.risk == 'MEDIUM' %}selected{% endif %}>Medium</option>
+          <option value="LOW"    {% if filters.risk == 'LOW' %}selected{% endif %}>Low</option>
+          <option value="NONE"   {% if filters.risk == 'NONE' %}selected{% endif %}>None</option>
+        </select>
+      </div>
+
+      <div class="form-control">
+        <label class="label py-0.5"><span class="label-text text-xs">Permission type</span></label>
+        <select name="ptype" class="select select-bordered select-sm">
+          <option value="" {% if not filters.ptype %}selected{% endif %}>All</option>
+          <option value="application" {% if filters.ptype == 'application' %}selected{% endif %}>Application</option>
+          <option value="delegated"   {% if filters.ptype == 'delegated' %}selected{% endif %}>Delegated</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+      <a href="/permissions/" class="btn btn-sm btn-ghost">Clear</a>
+    </form>
+  </div>
+</div>
+
+<!-- Legend -->
+<div class="flex flex-wrap gap-2 mb-4 text-xs text-slate-600 items-center">
+  <span class="font-medium">Risk legend:</span>
+  <span class="badge badge-xs badge-risk-high">HIGH</span> Broad write access (directory, users, mail, files)
+  <span class="badge badge-xs badge-risk-medium ml-2">MEDIUM</span> Read-all sensitive data
+  <span class="badge badge-xs badge-risk-low ml-2">LOW</span> Limited scope
+  <span class="badge badge-xs badge-ghost ml-2">NONE</span> Standard OpenID / profile
+</div>
+
+<!-- Table -->
+<div class="card bg-white shadow-sm overflow-x-auto">
+  <table class="table table-sm w-full">
+    <thead class="bg-slate-50">
+      <tr>
+        <th class="text-slate-600">Permission</th>
+        <th class="text-slate-600">Type</th>
+        <th class="text-slate-600 text-center">Risk</th>
+        <th class="text-slate-600">App</th>
+        <th class="text-slate-600">Flags</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if rows %}
+        {% for row in rows %}
+        <tr class="hover-row" onclick="location.href='/apps/{{ row.app.id }}'">
+          <td>
+            <span class="font-mono text-xs font-semibold">{{ row.perm.name }}</span>
+            {% if row.perm.description %}
+              <div class="text-xs text-slate-400 font-sans mt-0.5">{{ row.perm.description }}</div>
+            {% endif %}
+          </td>
+          <td class="text-xs">
+            {% if row.perm.permission_type == "application" %}
+              <span class="badge badge-xs badge-info">Application</span>
+            {% else %}
+              <span class="badge badge-xs badge-ghost">Delegated</span>
+            {% endif %}
+          </td>
+          <td class="text-center">
+            <span class="badge badge-xs {{ row.perm.risk_level | risk_badge }}">{{ row.perm.risk_level }}</span>
+          </td>
+          <td>
+            <span class="text-sm font-medium text-slate-700">{{ row.app.display_name }}</span>
+            {% if row.app.is_ownerless %}
+              <span class="badge badge-xs badge-warning ml-1">No owner</span>
+            {% endif %}
+          </td>
+          <td class="space-x-1">
+            {% if row.perm.is_ferpa_relevant %}
+              <span class="badge badge-xs badge-outline badge-secondary">FERPA</span>
+            {% endif %}
+            {% if row.perm.is_offline_access %}
+              <span class="badge badge-xs badge-outline badge-accent">offline</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="5" class="text-center text-slate-400 py-10">No permissions match the current filters.</td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}
