@@ -30,7 +30,7 @@
           hx-trigger="keyup changed delay:350ms"
           hx-target="#app-tbody"
           hx-swap="innerHTML"
-          hx-include="[name='risk'],[name='has_owner'],[name='audience']"
+          hx-include="[name='risk'],[name='has_owner'],[name='audience'],[name='sort_by'],[name='sort_dir']"
           hx-indicator="#htmx-loading"
         />
       </div>
@@ -44,7 +44,7 @@
                 hx-trigger="change"
                 hx-target="#app-tbody"
                 hx-swap="innerHTML"
-                hx-include="[name='q'],[name='has_owner'],[name='audience']"
+                hx-include="[name='q'],[name='has_owner'],[name='audience'],[name='sort_by'],[name='sort_dir']"
                 hx-indicator="#htmx-loading">
           <option value="" {% if not filters.risk %}selected{% endif %}>All</option>
           <option value="HIGH"   {% if filters.risk == 'HIGH' %}selected{% endif %}>High</option>
@@ -63,7 +63,7 @@
                 hx-trigger="change"
                 hx-target="#app-tbody"
                 hx-swap="innerHTML"
-                hx-include="[name='q'],[name='risk'],[name='audience']"
+                hx-include="[name='q'],[name='risk'],[name='audience'],[name='sort_by'],[name='sort_dir']"
                 hx-indicator="#htmx-loading">
           <option value="" {% if not filters.has_owner %}selected{% endif %}>All</option>
           <option value="yes" {% if filters.has_owner == 'yes' %}selected{% endif %}>Has owner</option>
@@ -80,7 +80,7 @@
                 hx-trigger="change"
                 hx-target="#app-tbody"
                 hx-swap="innerHTML"
-                hx-include="[name='q'],[name='risk'],[name='has_owner']"
+                hx-include="[name='q'],[name='risk'],[name='has_owner'],[name='sort_by'],[name='sort_dir']"
                 hx-indicator="#htmx-loading">
           <option value="" {% if not filters.audience %}selected{% endif %}>All</option>
           <option value="AzureADMyOrg" {% if filters.audience == 'AzureADMyOrg' %}selected{% endif %}>My org only</option>
@@ -96,18 +96,67 @@
   </div>
 </div>
 
+<!-- Hidden sort state — picked up by filter controls via hx-include -->
+<input type="hidden" id="sort-by-input" name="sort_by" value="{{ sort_by }}">
+<input type="hidden" id="sort-dir-input" name="sort_dir" value="{{ sort_dir }}">
+
 <!-- ── Table ── -->
 <div class="card bg-white shadow-sm overflow-x-auto">
   <table class="table table-sm w-full">
     <thead class="bg-slate-50">
       <tr>
         <th class="text-slate-600">App Name</th>
-        <th class="text-slate-600">Created</th>
-        <th class="text-slate-600">Audience</th>
-        <th class="text-slate-600">Owner(s)</th>
+
+        <!-- Created — sortable -->
+        <th class="text-slate-600 cursor-pointer select-none hover:bg-slate-100 whitespace-nowrap"
+            hx-get="/apps/"
+            hx-trigger="click"
+            hx-target="#app-tbody"
+            hx-swap="innerHTML"
+            hx-include="[name='q'],[name='risk'],[name='has_owner'],[name='audience'],[name='sort_by'],[name='sort_dir']"
+            hx-indicator="#htmx-loading"
+            hx-on::config-request="applySort(event, 'created')">
+          Created<span id="sort-arrow-created" class="sort-arrow ml-1 text-blue-500 font-normal">{{ "↑" if sort_by == "created" and sort_dir == "asc" else "↓" if sort_by == "created" and sort_dir == "desc" else "" }}</span>
+        </th>
+
+        <!-- Audience — sortable -->
+        <th class="text-slate-600 cursor-pointer select-none hover:bg-slate-100 whitespace-nowrap"
+            hx-get="/apps/"
+            hx-trigger="click"
+            hx-target="#app-tbody"
+            hx-swap="innerHTML"
+            hx-include="[name='q'],[name='risk'],[name='has_owner'],[name='audience'],[name='sort_by'],[name='sort_dir']"
+            hx-indicator="#htmx-loading"
+            hx-on::config-request="applySort(event, 'audience')">
+          Audience<span id="sort-arrow-audience" class="sort-arrow ml-1 text-blue-500 font-normal">{{ "↑" if sort_by == "audience" and sort_dir == "asc" else "↓" if sort_by == "audience" and sort_dir == "desc" else "" }}</span>
+        </th>
+
+        <!-- Owner(s) — sortable -->
+        <th class="text-slate-600 cursor-pointer select-none hover:bg-slate-100 whitespace-nowrap"
+            hx-get="/apps/"
+            hx-trigger="click"
+            hx-target="#app-tbody"
+            hx-swap="innerHTML"
+            hx-include="[name='q'],[name='risk'],[name='has_owner'],[name='audience'],[name='sort_by'],[name='sort_dir']"
+            hx-indicator="#htmx-loading"
+            hx-on::config-request="applySort(event, 'owner')">
+          Owner(s)<span id="sort-arrow-owner" class="sort-arrow ml-1 text-blue-500 font-normal">{{ "↑" if sort_by == "owner" and sort_dir == "asc" else "↓" if sort_by == "owner" and sort_dir == "desc" else "" }}</span>
+        </th>
+
         <th class="text-slate-600">Top Permission</th>
         <th class="text-slate-600">Credentials</th>
-        <th class="text-slate-600 text-center">Risk</th>
+
+        <!-- Risk — sortable -->
+        <th class="text-slate-600 cursor-pointer select-none hover:bg-slate-100 text-center whitespace-nowrap"
+            hx-get="/apps/"
+            hx-trigger="click"
+            hx-target="#app-tbody"
+            hx-swap="innerHTML"
+            hx-include="[name='q'],[name='risk'],[name='has_owner'],[name='audience'],[name='sort_by'],[name='sort_dir']"
+            hx-indicator="#htmx-loading"
+            hx-on::config-request="applySort(event, 'risk')">
+          Risk<span id="sort-arrow-risk" class="sort-arrow ml-1 text-blue-500 font-normal">{{ "↑" if sort_by == "risk" and sort_dir == "asc" else "↓" if sort_by == "risk" and sort_dir == "desc" else "" }}</span>
+        </th>
       </tr>
     </thead>
     <tbody id="app-tbody">
@@ -115,5 +164,33 @@
     </tbody>
   </table>
 </div>
+
+<script>
+  // Default first-click direction per column
+  const SORT_DEFAULTS = { created: 'desc', risk: 'desc', audience: 'asc', owner: 'asc' };
+
+  // Called from hx-on::config-request — fires after the trigger but before
+  // the HTMX request is sent, so we can override the parameters directly.
+  function applySort(event, col) {
+    const byEl  = document.getElementById('sort-by-input');
+    const dirEl = document.getElementById('sort-dir-input');
+    const newDir = byEl.value === col
+      ? (dirEl.value === 'asc' ? 'desc' : 'asc')
+      : (SORT_DEFAULTS[col] || 'asc');
+
+    // Update hidden inputs so subsequent filter changes preserve sort state
+    byEl.value  = col;
+    dirEl.value = newDir;
+
+    // Inject directly into the HTMX request parameters
+    event.detail.parameters['sort_by']  = col;
+    event.detail.parameters['sort_dir'] = newDir;
+
+    // Update visible arrows immediately (no round-trip needed)
+    document.querySelectorAll('.sort-arrow').forEach(el => { el.textContent = ''; });
+    const arrow = document.getElementById('sort-arrow-' + col);
+    if (arrow) arrow.textContent = newDir === 'asc' ? '↑' : '↓';
+  }
+</script>
 
 {% endblock %}

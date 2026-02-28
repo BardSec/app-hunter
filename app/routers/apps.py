@@ -20,12 +20,15 @@ async def app_list(
     risk: str = "",
     has_owner: str = "",
     audience: str = "",
+    sort_by: str = "",
+    sort_dir: str = "asc",
     user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     apps = await app_inventory.get_apps(
         user["access_token"], db,
         q=q, risk=risk, has_owner=has_owner, audience=audience,
+        sort_by=sort_by, sort_dir=sort_dir,
     )
 
     context = {
@@ -35,6 +38,8 @@ async def app_list(
         "active_page": "apps",
         "apps": apps,
         "filters": {"q": q, "risk": risk, "has_owner": has_owner, "audience": audience},
+        "sort_by": sort_by,
+        "sort_dir": sort_dir,
         "total": len(apps),
     }
 

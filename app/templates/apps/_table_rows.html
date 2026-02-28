@@ -1,3 +1,4 @@
+{% if request.headers.get('hx-request') %}<span id="app-count" hx-swap-oob="true">{{ total }}</span>{% endif %}
 {% if apps %}
   {% for app in apps %}
   <tr class="hover-row" onclick="location.href='/apps/{{ app.id }}'">
