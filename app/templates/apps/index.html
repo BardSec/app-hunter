@@ -10,6 +10,12 @@
       <span id="app-count">{{ total }}</span> app{{ 's' if total != 1 else '' }}
     </p>
   </div>
+  <button onclick="exportCsv()" class="btn btn-sm btn-ghost gap-1.5 text-slate-600">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+    </svg>
+    Export CSV
+  </button>
 </div>
 
 <!-- ── Filters ── -->
@@ -178,6 +184,18 @@
 </div>
 
 <script>
+  function exportCsv() {
+    const params = new URLSearchParams({
+      q:         document.querySelector('[name="q"]').value,
+      risk:      document.querySelector('[name="risk"]').value,
+      has_owner: document.querySelector('[name="has_owner"]').value,
+      audience:  document.querySelector('[name="audience"]').value,
+      sort_by:   document.getElementById('sort-by-input').value,
+      sort_dir:  document.getElementById('sort-dir-input').value,
+    });
+    window.location.href = '/apps/export?' + params.toString();
+  }
+
   // Default first-click direction per column
   const SORT_DEFAULTS = { created: 'desc', risk: 'desc', audience: 'asc', owner: 'asc', assignment: 'desc' };
 
