@@ -52,6 +52,13 @@ class AppOwner(BaseModel):
     user_principal_name: Optional[str] = None
 
 
+class AppRoleAssignment(BaseModel):
+    id: str
+    principal_display_name: str
+    principal_type: str  # "User", "Group", or "ServicePrincipal"
+    app_role_id: str = "00000000-0000-0000-0000-000000000000"
+
+
 class EntraApp(BaseModel):
     # Raw Graph fields
     id: str
@@ -64,6 +71,10 @@ class EntraApp(BaseModel):
     owners: list[AppOwner] = []
     permissions: list[AppPermission] = []
     credentials: list[AppCredential] = []
+
+    # Service principal / enterprise app fields
+    assignment_required: bool = False
+    app_role_assignments: list[AppRoleAssignment] = []
 
     # Computed / enriched fields (populated by the service layer)
     risk_level: RiskLevel = RiskLevel.NONE

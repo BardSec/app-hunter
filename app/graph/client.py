@@ -19,6 +19,7 @@ from app.graph.schemas import (
     AppCredential,
     AppOwner,
     AppPermission,
+    AppRoleAssignment,
     CredentialStatus,
     EntraApp,
     PermissionType,
@@ -159,6 +160,7 @@ class GraphClient:
 
     async def _build_app(self, raw: dict) -> EntraApp:
         obj_id = raw["id"]
+        app_id = raw.get("appId", "")
 
         owners = await self._get_owners(obj_id)
         fed_creds = await self._get_fed_creds(obj_id)
@@ -168,10 +170,11 @@ class GraphClient:
             + self._parse_certs(raw.get("keyCredentials", []))
             + fed_creds
         )
+        assignment_required, app_role_assignments = await self._get_sp_assignment_info(app_id)
 
         return EntraApp(
             id=obj_id,
-            app_id=raw.get("appId", ""),
+            app_id=app_id,
             display_name=raw.get("displayName", ""),
             created_date=_parse_dt(raw.get("createdDateTime")),
             sign_in_audience=raw.get("signInAudience", "AzureADMyOrg"),
@@ -180,6 +183,8 @@ class GraphClient:
             owners=owners,
             permissions=permissions,
             credentials=credentials,
+            assignment_required=assignment_required,
+            app_role_assignments=app_role_assignments,
         )
 
     async def _get_owners(self, app_object_id: str) -> list[AppOwner]:
@@ -219,6 +224,39 @@ class GraphClient:
             return creds
         except Exception:
             return []
+
+    async def _get_sp_assignment_info(
+        self, app_id: str
+    ) -> tuple[bool, list[AppRoleAssignment]]:
+        """Look up the service principal for this app and return (assignment_required, assignments)."""
+        try:
+            data = await self._get(
+                f"/servicePrincipals?$filter=appId eq '{app_id}'"
+                "&$select=id,appRoleAssignmentRequired"
+            )
+            sps = data.get("value", [])
+            if not sps:
+                return False, []
+            sp = sps[0]
+            sp_id = sp["id"]
+            assignment_required = sp.get("appRoleAssignmentRequired", False)
+
+            assignments_data = await self._get(
+                f"/servicePrincipals/{sp_id}/appRoleAssignedTo"
+                "?$select=id,principalDisplayName,principalType,appRoleId"
+            )
+            assignments = [
+                AppRoleAssignment(
+                    id=a.get("id", ""),
+                    principal_display_name=a.get("principalDisplayName", ""),
+                    principal_type=a.get("principalType", "User"),
+                    app_role_id=a.get("appRoleId", ""),
+                )
+                for a in assignments_data.get("value", [])
+            ]
+            return assignment_required, assignments
+        except Exception:
+            return False, []
 
     def _parse_permissions(self, required_resource_access: list[dict]) -> list[AppPermission]:
         perms: list[AppPermission] = []

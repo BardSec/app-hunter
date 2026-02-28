@@ -12,6 +12,7 @@ from app.graph.schemas import (
     AppCredential,
     AppOwner,
     AppPermission,
+    AppRoleAssignment,
     CredentialStatus,
     EntraApp,
     PermissionType,
@@ -87,6 +88,10 @@ def _fed(key_id: str, name: str, days: int) -> AppCredential:
     )
 
 
+def _assignment(aid: str, name: str, ptype: str) -> AppRoleAssignment:
+    return AppRoleAssignment(id=aid, principal_display_name=name, principal_type=ptype)
+
+
 def _owner(uid: str, name: str, upn: str) -> AppOwner:
     return AppOwner(id=uid, display_name=name, user_principal_name=upn)
 
@@ -151,6 +156,9 @@ def _build_apps() -> list[EntraApp]:
             credentials=[
                 _secret("cred-001a", "SIS Primary Secret", -60),   # EXPIRED
             ],
+            # Assignment required but no principals assigned — governance gap
+            assignment_required=True,
+            app_role_assignments=[],
         ),
 
         # ── 2. Canvas LMS ─────────────────────────────────────────────────────
@@ -241,6 +249,12 @@ def _build_apps() -> list[EntraApp]:
             credentials=[
                 _secret("cred-005a", "HR Portal Secret", 45),   # EXPIRING
             ],
+            assignment_required=True,
+            app_role_assignments=[
+                _assignment("ara-005a", "HR Staff",         "Group"),
+                _assignment("ara-005b", "Maria Wilson",     "User"),
+                _assignment("ara-005c", "Payroll Services", "Group"),
+            ],
         ),
 
         # ── 6. SubFinder – Substitute Management ─────────────────────────────
@@ -262,6 +276,11 @@ def _build_apps() -> list[EntraApp]:
             credentials=[
                 _cert("cred-006a", "SubFinder Certificate", 25),   # EXPIRING_SOON
                 _secret("cred-006b", "SubFinder Backup Secret", 75),  # EXPIRING_LATER
+            ],
+            assignment_required=True,
+            app_role_assignments=[
+                _assignment("ara-006a", "Substitute Coordinators", "Group"),
+                _assignment("ara-006b", "James Smith",              "User"),
             ],
         ),
 
@@ -327,6 +346,12 @@ def _build_apps() -> list[EntraApp]:
             credentials=[
                 _cert("cred-009a", "Diligent Certificate", -90),   # EXPIRED
             ],
+            assignment_required=True,
+            app_role_assignments=[
+                _assignment("ara-009a", "Board Members",     "Group"),
+                _assignment("ara-009b", "Superintendent",    "Group"),
+                _assignment("ara-009c", "District Counsel",  "User"),
+            ],
         ),
 
         # ── 10. PLC Collaboration Tool ────────────────────────────────────────
@@ -389,6 +414,12 @@ def _build_apps() -> list[EntraApp]:
             ],
             credentials=[
                 _secret("cred-012a", "ServiceNow Secret", 55),   # EXPIRING
+            ],
+            assignment_required=True,
+            app_role_assignments=[
+                _assignment("ara-012a", "IT Department",    "Group"),
+                _assignment("ara-012b", "Help Desk Staff",  "Group"),
+                _assignment("ara-012c", "James Smith",      "User"),
             ],
         ),
 
