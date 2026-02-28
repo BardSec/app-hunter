@@ -143,6 +143,18 @@
           Owner(s)<span id="sort-arrow-owner" class="sort-arrow ml-1 text-blue-500 font-normal">{{ "↑" if sort_by == "owner" and sort_dir == "asc" else "↓" if sort_by == "owner" and sort_dir == "desc" else "" }}</span>
         </th>
 
+        <!-- User Assignment — sortable -->
+        <th class="text-slate-600 cursor-pointer select-none hover:bg-slate-100 whitespace-nowrap"
+            hx-get="/apps/"
+            hx-trigger="click"
+            hx-target="#app-tbody"
+            hx-swap="innerHTML"
+            hx-include="[name='q'],[name='risk'],[name='has_owner'],[name='audience'],[name='sort_by'],[name='sort_dir']"
+            hx-indicator="#htmx-loading"
+            hx-on::config-request="applySort(event, 'assignment')">
+          Assignment<span id="sort-arrow-assignment" class="sort-arrow ml-1 text-blue-500 font-normal">{{ "↑" if sort_by == "assignment" and sort_dir == "asc" else "↓" if sort_by == "assignment" and sort_dir == "desc" else "" }}</span>
+        </th>
+
         <th class="text-slate-600">Top Permission</th>
         <th class="text-slate-600">Credentials</th>
 
@@ -167,7 +179,7 @@
 
 <script>
   // Default first-click direction per column
-  const SORT_DEFAULTS = { created: 'desc', risk: 'desc', audience: 'asc', owner: 'asc' };
+  const SORT_DEFAULTS = { created: 'desc', risk: 'desc', audience: 'asc', owner: 'asc', assignment: 'desc' };
 
   // Called from hx-on::config-request — fires after the trigger but before
   // the HTMX request is sent, so we can override the parameters directly.

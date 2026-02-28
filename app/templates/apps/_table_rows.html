@@ -38,6 +38,21 @@
       {% endif %}
     </td>
 
+    <!-- User assignment -->
+    <td class="text-sm whitespace-nowrap">
+      {% if app.assignment_required %}
+        {% if app.app_role_assignments %}
+          <span class="badge badge-xs badge-warning">Required</span>
+          <div class="text-xs text-slate-400 mt-0.5">{{ app.app_role_assignments | length }} assigned</div>
+        {% else %}
+          <span class="badge badge-xs badge-error">Required</span>
+          <div class="text-xs text-red-500 mt-0.5">none assigned</div>
+        {% endif %}
+      {% else %}
+        <span class="badge badge-xs badge-ghost">Open</span>
+      {% endif %}
+    </td>
+
     <!-- Top permissions -->
     <td>
       {% set high_perms = app.permissions | selectattr("risk_level", "equalto", "HIGH") | list %}
@@ -83,7 +98,7 @@
   {% endfor %}
 {% else %}
   <tr>
-    <td colspan="7" class="text-center text-slate-400 py-8">
+    <td colspan="8" class="text-center text-slate-400 py-8">
       No apps match the current filters.
     </td>
   </tr>

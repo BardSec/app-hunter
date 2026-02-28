@@ -110,6 +110,14 @@ def _sort(apps: list[EntraApp], sort_by: str, sort_dir: str) -> list[EntraApp]:
         )
     if sort_by == "risk":
         return sorted(apps, key=lambda a: _RISK_ORDER[a.risk_level], reverse=reverse)
+    if sort_by == "assignment":
+        # asc: open → restricted; desc: restricted → open
+        # secondary: apps with no assignments sink to the end in both directions
+        return sorted(
+            apps,
+            key=lambda a: (not a.assignment_required, a.assignment_required and not a.app_role_assignments),
+            reverse=reverse,
+        )
     return apps
 
 
