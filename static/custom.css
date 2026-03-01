@@ -53,3 +53,11 @@
     color: #713f12;
     text-align: center;
 }
+.mock-banner-link {
+    color: #713f12;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+.mock-banner-link:hover {
+    color: #431f05;
+}
