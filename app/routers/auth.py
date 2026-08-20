@@ -29,6 +29,13 @@ async def callback(request: Request, code: str = "", state: str = "", error: str
     if settings.MOCK_DATA:
         return RedirectResponse(url="/", status_code=302)
 
+    # If a session already exists, skip the exchange. This protects against
+    # the callback being hit twice (browser back/forward, history reload,
+    # link prefetching, or a duplicate tab) — the second redemption would
+    # otherwise fail with AADSTS54005 (code already redeemed).
+    if request.session.get("user"):
+        return RedirectResponse(url="/", status_code=302)
+
     if error:
         return templates.TemplateResponse(
             "login.html",
@@ -37,6 +44,9 @@ async def callback(request: Request, code: str = "", state: str = "", error: str
 
     saved_state = request.session.pop("oauth_state", None)
     if state != saved_state:
+        # State already consumed by a parallel callback that completed first.
+        if request.session.get("user"):
+            return RedirectResponse(url="/", status_code=302)
         return templates.TemplateResponse(
             "login.html",
             {"request": request, "error": "Invalid state parameter.", "mock_mode": False},
@@ -44,6 +54,10 @@ async def callback(request: Request, code: str = "", state: str = "", error: str
 
     result = microsoft.exchange_code(code)
     if "error" in result:
+        # If a concurrent callback beat us to the redemption, the user is
+        # already authenticated — silently send them home.
+        if request.session.get("user"):
+            return RedirectResponse(url="/", status_code=302)
         return templates.TemplateResponse(
             "login.html",
             {
